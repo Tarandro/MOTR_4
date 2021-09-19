@@ -187,7 +187,7 @@ class DetMOTDetection:
             gt_instances.append(gt_instances_i)
         #print(2, images, gt_instances, 2)
         data.update({
-            'imgs': images,
+            'imgs': np.array([images, images]),
             'gt_instances': gt_instances,
         })
         if self.args.vis:

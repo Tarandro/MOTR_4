@@ -190,6 +190,31 @@ def main(args):
     random.seed(seed)
 
     model, criterion, postprocessors = build_model(args)
+
+    new_in_channels = 4
+    layer = model.backbone.features.conv1
+
+    # Creating new Conv2d layer
+    new_layer = torch.nn.Conv2d(in_channels=new_in_channels,
+                                  out_channels=layer.out_channels,
+                                  kernel_size=layer.kernel_size,
+                                  stride=layer.stride,
+                                  padding=layer.padding,
+                                  bias=layer.bias)
+
+    copy_weights = 0  # Here will initialize the weights from new channel with the red channel weights
+
+    # Copying the weights from the old to the new layer
+    new_layer.weight[:, :layer.in_channels, :, :] = layer.weight.clone()
+
+    # Copying the weights of the `copy_weights` channel of the old layer to the extra channels of the new layer
+    for i in range(new_in_channels - layer.in_channels):
+        channel = layer.in_channels + i
+        new_layer.weight[:, channel:channel + 1, :, :] = layer.weight[:, copy_weights:copy_weights + 1, ::].clone()
+    new_layer.weight = torch.nn.Parameter(new_layer.weight)
+
+    model.backbone.features.conv1 = new_layer
+
     model.to(device)
 
     model_without_ddp = model
