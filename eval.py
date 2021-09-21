@@ -303,7 +303,7 @@ class Detector(object):
         targets = load_label(label_path, cur_img.shape[:2]) if os.path.exists(label_path) else None
         return cur_img, targets
 
-    def init_img(self, img):
+    def init_img(self, img, img2):
         ori_img = img.copy()
         self.seq_h, self.seq_w = img.shape[:2]
         scale = self.img_height / min(self.seq_h, self.seq_w)
@@ -313,6 +313,9 @@ class Detector(object):
         target_w = int(self.seq_w * scale)
         img = cv2.resize(img, (target_w, target_h))
         img = F.normalize(F.to_tensor(img), self.mean, self.std)
+        img2 = cv2.resize(img2, (target_w, target_h))
+        img2 = F.normalize(F.to_tensor(img2), self.mean, self.std)
+        img = torch.cat((img, img2))
         img = img.unsqueeze(0)
         return img, ori_img
 
@@ -366,7 +369,7 @@ class Detector(object):
         max_id = 0
         for i in tqdm(range(0, self.img_len)):
             img, targets = self.load_img_from_file(self.img_list[i])
-            cur_img, ori_img = self.init_img(img)
+            cur_img, ori_img = self.init_img(img, img)
 
             # track_instances = None
             if track_instances is not None:
@@ -410,6 +413,21 @@ if __name__ == '__main__':
 
     # load model and weights
     detr, _, _ = build_model(args)
+
+    new_in_channels = 6
+    layer = detr.backbone[0].body.conv1
+    # Creating new Conv2d layer
+    new_layer = torch.nn.Conv2d(in_channels=new_in_channels,
+                                out_channels=layer.out_channels,
+                                kernel_size=layer.kernel_size,
+                                stride=layer.stride,
+                                padding=layer.padding,
+                                bias=layer.bias).requires_grad_()
+    copy_weights = 0  # Here will initialize the weights from new channel with the red channel weights
+    from torch.autograd import Variable
+    new_layer.weight[:, :3, :, :].data[...] = Variable(layer.weight.clone(), requires_grad=True)
+    detr.backbone[0].body.conv1 = new_layer
+
     checkpoint = torch.load(args.resume, map_location='cpu')
     detr = load_model(detr, args.resume)
     detr = detr.cuda()
