@@ -191,7 +191,7 @@ def main(args):
 
     model, criterion, postprocessors = build_model(args)
 
-    new_in_channels = 4
+    new_in_channels = 6
     layer = model.backbone[0].body.conv1
 
     # Creating new Conv2d layer

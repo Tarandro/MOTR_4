@@ -190,7 +190,7 @@ class DetMOTDetection:
             gt_instances.append(gt_instances_i)
         #print(2, images, gt_instances, 2)
         data.update({
-            'imgs': torch.cat((images.unsqueeze(0), images2.unsqueeze(0))),
+            'imgs': [torch.cat((img, img)) for img in images],
             'gt_instances': gt_instances,
         })
         if self.args.vis:
