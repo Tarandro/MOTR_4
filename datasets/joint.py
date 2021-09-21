@@ -101,6 +101,7 @@ class DetMOTDetection:
         #if 'crowdhuman' in img_path:
         #    img_path = img_path.replace('.jpg', '.png')
         img = Image.open(img_path)
+        img2 = Image.open(img_path)
         targets = {}
         w, h = img._size
         assert w > 0 and h > 0, "invalid image {} with shape {} {}".format(img_path, w, h)
@@ -151,7 +152,7 @@ class DetMOTDetection:
         targets['boxes'] = torch.as_tensor(targets['boxes'], dtype=torch.float32).reshape(-1, 4)
         targets['boxes'][:, 0::2].clamp_(min=0, max=w)
         targets['boxes'][:, 1::2].clamp_(min=0, max=h)
-        return img, targets
+        return img, img2, targets
 
     def _get_sample_range(self, start_idx):
 
@@ -167,27 +168,29 @@ class DetMOTDetection:
     def pre_continuous_frames(self, start, end, interval=1):
         targets = []
         images = []
+        images2 = []
         for i in range(start, end, interval):
-            img_i, targets_i = self._pre_single_frame(i)
+            img_i, img_i2, targets_i = self._pre_single_frame(i)
             images.append(img_i)
+            images2.append(img_i2)
             targets.append(targets_i)
-        return images, targets
+        return images, images2, targets
 
     def __getitem__(self, idx):
         sample_start, sample_end, sample_interval = self._get_sample_range(idx)
-        images, targets = self.pre_continuous_frames(sample_start, sample_end, sample_interval)
+        images, images2, targets = self.pre_continuous_frames(sample_start, sample_end, sample_interval)
         data = {}
         dataset_name = targets[0]['dataset']
         transform = self.dataset2transform[dataset_name]
         if transform is not None:
-            images, targets = transform(images, targets)
+            images, images2, targets = transform(images, images2, targets)
         gt_instances = []
         for img_i, targets_i in zip(images, targets):
             gt_instances_i = self._targets_to_instances(targets_i, img_i.shape[1:3])
             gt_instances.append(gt_instances_i)
         #print(2, images, gt_instances, 2)
         data.update({
-            'imgs': np.array([images, images]),
+            'imgs': torch.cat((images.unsqueeze(0), images2.unsqueeze(0))),
             'gt_instances': gt_instances,
         })
         if self.args.vis:

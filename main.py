@@ -192,7 +192,7 @@ def main(args):
     model, criterion, postprocessors = build_model(args)
 
     new_in_channels = 4
-    layer = model.backbone.features.conv1
+    layer = model.backbone[0].body.conv1
 
     # Creating new Conv2d layer
     new_layer = torch.nn.Conv2d(in_channels=new_in_channels,
@@ -200,20 +200,23 @@ def main(args):
                                   kernel_size=layer.kernel_size,
                                   stride=layer.stride,
                                   padding=layer.padding,
-                                  bias=layer.bias)
+                                  bias=layer.bias).requires_grad_()
 
     copy_weights = 0  # Here will initialize the weights from new channel with the red channel weights
 
     # Copying the weights from the old to the new layer
-    new_layer.weight[:, :layer.in_channels, :, :] = layer.weight.clone()
+    #new_layer.weight[:, :layer.in_channels, :, :] = layer.weight.clone()
+
+    from torch.autograd import Variable
+    new_layer.weight[:, :3, :, :].data[...] = Variable(layer.weight.clone(), requires_grad=True)
 
     # Copying the weights of the `copy_weights` channel of the old layer to the extra channels of the new layer
-    for i in range(new_in_channels - layer.in_channels):
-        channel = layer.in_channels + i
-        new_layer.weight[:, channel:channel + 1, :, :] = layer.weight[:, copy_weights:copy_weights + 1, ::].clone()
-    new_layer.weight = torch.nn.Parameter(new_layer.weight)
+    #for i in range(new_in_channels - layer.in_channels):
+    #    channel = layer.in_channels + i
+    #    new_layer.weight[:, channel:channel + 1, :, :] = layer.weight[:, copy_weights:copy_weights + 1, ::].clone()
+    #new_layer.weight = torch.nn.Parameter(new_layer.weight)
 
-    model.backbone.features.conv1 = new_layer
+    model.backbone[0].body.conv1 = new_layer
 
     model.to(device)
 
