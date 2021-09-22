@@ -101,7 +101,7 @@ class DetMOTDetection:
         #if 'crowdhuman' in img_path:
         #    img_path = img_path.replace('.jpg', '.png')
         img = Image.open(img_path)
-        img2 = Image.open(img_path)
+        img2 = Image.open(img_path.replace('images', 'train_MOT17'))
         targets = {}
         w, h = img._size
         assert w > 0 and h > 0, "invalid image {} with shape {} {}".format(img_path, w, h)
@@ -190,7 +190,7 @@ class DetMOTDetection:
             gt_instances.append(gt_instances_i)
         #print(2, images, gt_instances, 2)
         data.update({
-            'imgs': [torch.cat((img, img)) for img in images],
+            'imgs': [torch.cat((img, img2)) for img, img2 in zip(images, images2)],
             'gt_instances': gt_instances,
         })
         if self.args.vis:

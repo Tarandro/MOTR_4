@@ -295,13 +295,14 @@ class Detector(object):
         if os.path.exists(os.path.join(self.predict_path, 'gt.txt')):
             os.remove(os.path.join(self.predict_path, 'gt.txt'))
 
-
     def load_img_from_file(self, f_path):
         label_path = f_path.replace('images', 'labels_with_ids').replace('.png', '.txt').replace('.jpg', '.txt')
         cur_img = cv2.imread(f_path)
         cur_img = cv2.cvtColor(cur_img, cv2.COLOR_BGR2RGB)
+        cur_img2 = cv2.imread(f_path.replace('images', 'train_MOT17'))
+        cur_img2 = cv2.cvtColor(cur_img2, cv2.COLOR_BGR2RGB)
         targets = load_label(label_path, cur_img.shape[:2]) if os.path.exists(label_path) else None
-        return cur_img, targets
+        return cur_img, cur_img2, targets
 
     def init_img(self, img, img2):
         ori_img = img.copy()
@@ -368,8 +369,8 @@ class Detector(object):
         track_instances = None
         max_id = 0
         for i in tqdm(range(0, self.img_len)):
-            img, targets = self.load_img_from_file(self.img_list[i])
-            cur_img, ori_img = self.init_img(img, img)
+            img, img2, targets = self.load_img_from_file(self.img_list[i])
+            cur_img, ori_img = self.init_img(img, img2)
 
             # track_instances = None
             if track_instances is not None:
