@@ -101,7 +101,7 @@ class DetMOTDetection:
         #if 'crowdhuman' in img_path:
         #    img_path = img_path.replace('.jpg', '.png')
         img = Image.open(img_path)
-        img2 = Image.open(img_path.replace('images', 'train_MOT17'))
+        img2 = Image.open(img_path.replace('images', 'train'))
         targets = {}
         w, h = img._size
         assert w > 0 and h > 0, "invalid image {} with shape {} {}".format(img_path, w, h)

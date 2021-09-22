@@ -299,7 +299,7 @@ class Detector(object):
         label_path = f_path.replace('images', 'labels_with_ids').replace('.png', '.txt').replace('.jpg', '.txt')
         cur_img = cv2.imread(f_path)
         cur_img = cv2.cvtColor(cur_img, cv2.COLOR_BGR2RGB)
-        cur_img2 = cv2.imread(f_path.replace('images', 'train_MOT17'))
+        cur_img2 = cv2.imread(f_path.replace('images', 'train'))
         cur_img2 = cv2.cvtColor(cur_img2, cv2.COLOR_BGR2RGB)
         targets = load_label(label_path, cur_img.shape[:2]) if os.path.exists(label_path) else None
         return cur_img, cur_img2, targets
