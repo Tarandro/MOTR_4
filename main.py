@@ -209,6 +209,7 @@ def main(args):
 
     from torch.autograd import Variable
     new_layer.weight[:, :3, :, :].data[...] = Variable(layer.weight.clone(), requires_grad=True)
+    new_layer.weight[:, 3:, :, :].data[...] = Variable(layer.weight.clone(), requires_grad=True)
 
     # Copying the weights of the `copy_weights` channel of the old layer to the extra channels of the new layer
     #for i in range(new_in_channels - layer.in_channels):
