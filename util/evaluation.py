@@ -58,22 +58,43 @@ def read_results(filename, data_type: str, is_gt=False, is_ignore=False):
 
 def read_mot_results(filename, is_gt, is_ignore):
     results_dict = dict()
-    if os.path.isfile(filename):
-        with open(filename, 'r') as f:
-            for line in f.readlines():
-                linelist = line.split(',')
+    if not is_gt:
+        if os.path.isfile(filename):
+            with open(filename, 'r') as f:
+                for line in f.readlines():
+                    linelist = line.split(',')
 
-                fid = int(linelist[0])
-                if fid < 1:
-                    continue
-                results_dict.setdefault(fid, list())
+                    fid = int(linelist[0])
+                    if fid < 1:
+                        continue
+                    results_dict.setdefault(fid, list())
 
-                score = 1
+                    score = 1
 
-                tlwh = tuple(map(float, linelist[2:6]))
-                target_id = int(linelist[1])
+                    tlwh = tuple(map(float, linelist[2:6]))
+                    target_id = int(linelist[1])
 
-                results_dict[fid].append((tlwh, target_id, score))
+                    results_dict[fid].append((tlwh, target_id, score))
+    else:
+        for i in range(700):
+            t = filename.split("/")[3] + f'_frame{i:04}'
+            gt_file = filename.replace("gt/gt", t)
+            if os.path.isfile(gt_file):
+                with open(filename, 'r') as f:
+                    for line in f.readlines():
+                        linelist = line.split(',')
+
+                        fid = int(linelist[0])
+                        if fid < 1:
+                            continue
+                        results_dict.setdefault(fid, list())
+
+                        score = 1
+
+                        tlwh = tuple(map(float, linelist[2:6]))
+                        target_id = int(linelist[1])
+
+                        results_dict[fid].append((tlwh, target_id, score))
 
     return results_dict
 
@@ -100,6 +121,7 @@ class Evaluator(object):
         assert self.data_type == 'mot'
 
         gt_filename = os.path.join(self.data_root, self.seq_name, 'gt', 'gt.txt')
+        gt_filename = gt_filename.replace("images", "labels_with_ids")
         self.gt_frame_dict = read_results(gt_filename, self.data_type, is_gt=True)
         self.gt_ignore_frame_dict = read_results(gt_filename, self.data_type, is_ignore=True)
 
