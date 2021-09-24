@@ -80,7 +80,7 @@ def read_mot_results(filename, is_gt, is_ignore):
             t = filename.split("/")[3] + f'_frame{i:04}'
             gt_file = filename.replace("gt/gt", t)
             if os.path.isfile(gt_file):
-                with open(filename, 'r') as f:
+                with open(gt_file, 'r') as f:
                     for line in f.readlines():
                         linelist = line.split(',')
 
